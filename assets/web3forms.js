@@ -6,8 +6,6 @@
 const WEB3FORMS_CONFIG = {
     apiKey: FORM_SETTINGS.accessKey,
     endpoint: FORM_SETTINGS.apiEndpoint,
-    cloudflareKey: FORM_SETTINGS.cloudflareKey,
-    hcaptchaKey: FORM_SETTINGS.hcaptchaKey,
     soundEffects: {
         open: "https://www.myinstants.com/media/sounds/windows-xp-startup.mp3",
         send: AUDIO_SOURCES.startSound,
@@ -18,10 +16,13 @@ const WEB3FORMS_CONFIG = {
     }
 };
 
-// Captcha token variables
-let turnstileToken = null;
-let hcaptchaToken = null;
-let captchaType = 'turnstile'; // Default to Turnstile, will fallback to hCaptcha if needed
+// Math challenge data
+let mathChallengeData = {
+    num1: 0,
+    num2: 0,
+    operation: '+',
+    correctAnswer: 0
+};
 
 // Initialize the email form functionality
 function initEmailForm() {
@@ -30,23 +31,60 @@ function initEmailForm() {
     if (emailButton) {
         emailButton.addEventListener('click', showEmailFormWindow);
     }
-
-    // Both scripts are now preloaded in HTML, so we just need to check which one is available
-    setupCaptchaAvailability();
 }
 
-// Setup captcha availability check
-function setupCaptchaAvailability() {
-    // Set a timeout to check if Turnstile is available, otherwise use hCaptcha
-    setTimeout(() => {
-        if (typeof window.turnstile === 'undefined') {
-            console.log('Cloudflare Turnstile not available. Using hCaptcha...');
-            captchaType = 'hcaptcha';
-        } else {
-            console.log('Cloudflare Turnstile available and will be used.');
-            captchaType = 'turnstile';
-        }
-    }, 2000); // Give scripts time to initialize
+// Generate a new math challenge
+function generateMathChallenge() {
+    // Generate random numbers and operation
+    const operations = ['+', '-', '×']; // Addition, subtraction, multiplication
+    const operationIndex = Math.floor(Math.random() * operations.length);
+    
+    // Set difficulty based on operation
+    let num1, num2;
+    
+    switch(operations[operationIndex]) {
+        case '+': // Addition - medium difficulty
+            num1 = Math.floor(Math.random() * 50) + 10; // 10-59
+            num2 = Math.floor(Math.random() * 40) + 5;  // 5-44
+            break;
+        case '-': // Subtraction - ensure positive result
+            num1 = Math.floor(Math.random() * 50) + 30; // 30-79
+            num2 = Math.floor(Math.random() * 20) + 5;  // 5-24
+            break;
+        case '×': // Multiplication - lower numbers
+            num1 = Math.floor(Math.random() * 12) + 2;  // 2-13
+            num2 = Math.floor(Math.random() * 8) + 2;   // 2-9
+            break;
+    }
+    
+    // Calculate correct answer
+    let correctAnswer;
+    switch(operations[operationIndex]) {
+        case '+':
+            correctAnswer = num1 + num2;
+            break;
+        case '-':
+            correctAnswer = num1 - num2;
+            break;
+        case '×':
+            correctAnswer = num1 * num2;
+            break;
+    }
+    
+    // Store the challenge data
+    mathChallengeData = {
+        num1: num1,
+        num2: num2,
+        operation: operations[operationIndex],
+        correctAnswer: correctAnswer
+    };
+    
+    return mathChallengeData;
+}
+
+// Validate math challenge answer
+function validateMathChallenge(userAnswer) {
+    return parseInt(userAnswer, 10) === mathChallengeData.correctAnswer;
 }
 
 // Play a sound effect
@@ -109,7 +147,7 @@ function showEmailFormWindow() {
     
     const titleText = document.createElement('div');
     titleText.className = 'title-bar-text';
-    titleText.textContent = 'Contact Form - Windows 7';
+    titleText.textContent = 'Formulário de Contacto - Windows 7';
     
     const titleControls = document.createElement('div');
     titleControls.className = 'title-bar-controls';
@@ -139,9 +177,9 @@ function showEmailFormWindow() {
         <input type="hidden" name="from_name" value="Windows 7 Maintenance Form">
         
         <fieldset>
-            <legend>Your Contact Information</legend>
+            <legend>As Suas Informações de Contacto</legend>
             <div class="field-row">
-                <label for="name">Name:</label>
+                <label for="name">Nome:</label>
                 <input type="text" id="name" name="name" required>
             </div>
             
@@ -151,35 +189,38 @@ function showEmailFormWindow() {
             </div>
             
             <div class="field-row">
-                <label for="company">Company:</label>
+                <label for="company">Empresa:</label>
                 <input type="text" id="company" name="company">
             </div>
         </fieldset>
         
         <fieldset>
-            <legend>Your Message</legend>
+            <legend>A Sua Mensagem</legend>
             <div class="field-row">
-                <label for="subject">Subject:</label>
+                <label for="subject">Assunto:</label>
                 <input type="text" id="subject" name="message-subject" required>
             </div>
             
             <div class="field-row vertical">
-                <label for="message">Message:</label>
+                <label for="message">Mensagem:</label>
                 <textarea id="message" name="message" rows="6" required></textarea>
             </div>
         </fieldset>
         
         <fieldset>
-            <legend>Verification</legend>
+            <legend>Verificação</legend>
             <div class="field-row verification-row">
-                <!-- Turnstile container (default) -->
-                <div id="turnstile-container" class="captcha-container">
-                    <div class="cf-turnstile" data-sitekey="${WEB3FORMS_CONFIG.cloudflareKey}" data-callback="turnstileCallback"></div>
-                </div>
-                
-                <!-- hCaptcha container (fallback) -->
-                <div id="hcaptcha-container" class="captcha-container" style="display: none;">
-                    <div class="h-captcha" data-sitekey="${WEB3FORMS_CONFIG.hcaptchaKey}" data-callback="hcaptchaCallback"></div>
+                <div id="math-challenge-container" class="math-challenge">
+                    <div class="math-problem">
+                        <span id="math-num1"></span>
+                        <span id="math-operation"></span>
+                        <span id="math-num2"></span>
+                        <span>=</span>
+                        <input type="number" id="math-answer" name="math-answer" required>
+                    </div>
+                    <div class="math-instructions">
+                        Por favor resolva este problema matemático simples para verificar que não é um robô.
+                    </div>
                 </div>
             </div>
         </fieldset>
@@ -187,9 +228,9 @@ function showEmailFormWindow() {
         <div class="form-status" id="web3-form-status"></div>
         
         <section class="field-row field-row-last">
-            <button type="submit" id="send-btn">Send Message</button>
-            <button type="reset" id="reset-btn">Clear Form</button>
-            <button type="button" id="cancel-btn">Cancel</button>
+            <button type="submit" id="send-btn">Enviar Mensagem</button>
+            <button type="reset" id="reset-btn">Limpar Formulário</button>
+            <button type="button" id="cancel-btn">Cancelar</button>
         </section>
     `;
     
@@ -233,8 +274,11 @@ function showEmailFormWindow() {
     // Setup the form submission
     setupFormSubmission(form);
     
+    // Generate and display a math challenge
+    updateMathChallenge();
+    
     // Add focus and blur event listeners for typing effects
-    const inputs = form.querySelectorAll('input[type="text"], input[type="email"], textarea');
+    const inputs = form.querySelectorAll('input[type="text"], input[type="email"], textarea, input[type="number"]');
     inputs.forEach(input => {
         input.addEventListener('focus', () => showTypingEffect(input));
         input.addEventListener('blur', () => stopTypingEffect(input));
@@ -244,11 +288,6 @@ function showEmailFormWindow() {
     dialogWindow.classList.add('window-opening');
     setTimeout(() => {
         dialogWindow.classList.remove('window-opening');
-        
-        // Check and switch captcha after window is fully opened and visible
-        setTimeout(() => {
-            checkAndSwitchCaptcha();
-        }, 300);
     }, 400);
 }
 
@@ -361,7 +400,13 @@ function closeEmailFormWindow(dialogOverlay) {
     
     // Remove the overlay after animation completes
     setTimeout(() => {
-        document.body.removeChild(dialogOverlay);
+        // Use centralized close function for proper cleanup if available
+        if (typeof closeWindow === 'function') {
+            closeWindow(dialogWindow);
+        } else {
+            // Fallback if window manager function not available
+            document.body.removeChild(dialogOverlay);
+        }
     }, 300);
 }
 
@@ -372,32 +417,24 @@ function setupFormSubmission(form) {
     form.addEventListener('submit', async function(e) {
         e.preventDefault();
         
-        // Validate captcha token based on current type
-        let hasValidToken = false;
-        if (captchaType === 'turnstile' && turnstileToken) {
-            hasValidToken = true;
-        } else if (captchaType === 'hcaptcha' && hcaptchaToken) {
-            hasValidToken = true;
-        }
-        
-        if (!hasValidToken) {
-            formStatus.textContent = 'Please complete the CAPTCHA verification.';
+        // Validate math challenge
+        const mathAnswer = document.getElementById('math-answer').value;
+        if (!mathAnswer || !validateMathChallenge(mathAnswer)) {
+            formStatus.textContent = 'Por favor resolva o problema matemático corretamente.';
             formStatus.className = 'form-status error';
             playSound('error');
+            
+            // Generate a new math challenge
+            updateMathChallenge();
             return;
         }
         
         // Clear previous status
-        formStatus.textContent = 'Sending message...';
+        formStatus.textContent = 'A enviar mensagem...';
         formStatus.className = 'form-status sending';
         
-        // Add the appropriate captcha token to form data
+        // Create form data
         const formData = new FormData(form);
-        if (captchaType === 'turnstile' && turnstileToken) {
-            formData.append('cf-turnstile-response', turnstileToken);
-        } else if (captchaType === 'hcaptcha' && hcaptchaToken) {
-            formData.append('h-captcha-response', hcaptchaToken);
-        }
         
         // Play sending sound
         playSound('send');
@@ -427,11 +464,14 @@ function setupFormSubmission(form) {
             if (response.ok) {
                 // Success message
                 formStatus.innerHTML = '';
-                formStatus.textContent = 'Message sent successfully!';
+                formStatus.textContent = 'Mensagem enviada com sucesso!';
                 formStatus.className = 'form-status success';
                 
                 // Reset the form
                 form.reset();
+                
+                // Generate a new math challenge
+                updateMathChallenge();
                 
                 // Play success sound
                 playSound('success');
@@ -439,13 +479,10 @@ function setupFormSubmission(form) {
                 // Show success dialog after a moment
                 setTimeout(() => {
                     showWindowsDialog(
-                        'Message Sent', 
-                        'Your message has been sent successfully. Our team will contact you shortly.'
+                        'Mensagem Enviada', 
+                        'A sua mensagem foi enviada com sucesso. A nossa equipa entrará em contacto brevemente.'
                     );
                 }, 1000);
-                
-                // Reset Captcha
-                resetCaptcha();
             } else {
                 throw new Error(data.message || 'Form submission failed');
             }
@@ -453,7 +490,7 @@ function setupFormSubmission(form) {
             // Error message
             console.error('Form error:', error);
             formStatus.innerHTML = '';
-            formStatus.textContent = 'Error sending message. Please try again.';
+            formStatus.textContent = 'Erro ao enviar mensagem. Por favor, tente novamente.';
             formStatus.className = 'form-status error';
             
             // Play error sound
@@ -461,8 +498,8 @@ function setupFormSubmission(form) {
             
             // Show error dialog
             showWindowsDialog(
-                'Error', 
-                'There was an error sending your message. Please try again later.'
+                'Erro', 
+                'Ocorreu um erro ao enviar a sua mensagem. Por favor tente novamente mais tarde.'
             );
         }
     });
@@ -474,8 +511,8 @@ function setupFormSubmission(form) {
             formStatus.textContent = '';
             formStatus.className = 'form-status';
             
-            // Reset Captcha
-            resetCaptcha();
+            // Generate a new math challenge
+            updateMathChallenge();
             
             // Add reset animation
             resetBtn.classList.add('clicked');
@@ -483,17 +520,6 @@ function setupFormSubmission(form) {
                 resetBtn.classList.remove('clicked');
             }, 200);
         });
-    }
-}
-
-// Function to reset the current captcha
-function resetCaptcha() {
-    if (captchaType === 'turnstile' && window.turnstile) {
-        window.turnstile.reset();
-        turnstileToken = null;
-    } else if (captchaType === 'hcaptcha' && window.hcaptcha) {
-        window.hcaptcha.reset();
-        hcaptchaToken = null;
     }
 }
 
@@ -593,58 +619,33 @@ function showWindowsDialog(title, message) {
     });
 }
 
-// Callback function for Cloudflare Turnstile
-function turnstileCallback(token) {
-    turnstileToken = token;
-    captchaType = 'turnstile';
-    const formStatus = document.getElementById('web3-form-status');
-    if (formStatus) {
-        formStatus.textContent = 'Verification completed!';
-        formStatus.className = 'form-status success';
-    }
-}
-
-// Callback function for hCaptcha
-function hcaptchaCallback(token) {
-    hcaptchaToken = token;
-    captchaType = 'hcaptcha';
-    const formStatus = document.getElementById('web3-form-status');
-    if (formStatus) {
-        formStatus.textContent = 'Verification completed!';
-        formStatus.className = 'form-status success';
-    }
-}
-
-// Check which captcha is loaded and switch containers if needed
-function checkAndSwitchCaptcha() {
-    // This function is called after a delay to ensure both scripts have had a chance to load
-    const turnstileContainer = document.getElementById('turnstile-container');
-    const hcaptchaContainer = document.getElementById('hcaptcha-container');
+// Update the math challenge in the form
+function updateMathChallenge() {
+    // Generate a new challenge
+    const challenge = generateMathChallenge();
     
-    if (!turnstileContainer || !hcaptchaContainer) return;
+    // Update the display
+    const num1Element = document.getElementById('math-num1');
+    const operationElement = document.getElementById('math-operation');
+    const num2Element = document.getElementById('math-num2');
+    const answerInput = document.getElementById('math-answer');
     
-    if (captchaType === 'hcaptcha') {
-        turnstileContainer.style.display = 'none';
-        hcaptchaContainer.style.display = 'block';
-    } else {
-        turnstileContainer.style.display = 'block';
-        hcaptchaContainer.style.display = 'none';
+    if (num1Element && operationElement && num2Element && answerInput) {
+        num1Element.textContent = challenge.num1;
+        operationElement.textContent = challenge.operation;
+        num2Element.textContent = challenge.num2;
+        answerInput.value = '';
+        
+        // Add a subtle animation to indicate the challenge changed
+        const container = document.getElementById('math-challenge-container');
+        if (container) {
+            container.classList.add('challenge-updated');
+            setTimeout(() => {
+                container.classList.remove('challenge-updated');
+            }, 500);
+        }
     }
 }
-
-// Properly expose the callback functions globally
-window.turnstileCallback = turnstileCallback;
-window.hcaptchaCallback = hcaptchaCallback;
 
 // Initialize on document load
-document.addEventListener('DOMContentLoaded', function() {
-    initEmailForm();
-    
-    // After a delay, check which captcha system is available
-    setTimeout(() => {
-        // If the form window is open, update the captcha display
-        if (document.querySelector('.email-form-window')) {
-            checkAndSwitchCaptcha();
-        }
-    }, 5500); // Wait a bit longer than the initial captcha load timeout
-});
+document.addEventListener('DOMContentLoaded', initEmailForm);

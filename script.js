@@ -81,19 +81,19 @@ function updateProgressBar() {
   }
   
   if (progressPercent) {
-    progressPercent.textContent = Math.floor(progressValue) + '% complete';
+    progressPercent.textContent = Math.floor(progressValue) + '% completo';
   }
   
   // Update fake remaining items count
   if (remainingItems) {
     const itemsLeft = Math.floor((100 - progressValue) * 50) + Math.floor(Math.random() * 20);
-    remainingItems.textContent = `Items remaining: ${itemsLeft.toLocaleString()} files`;
+    remainingItems.textContent = `Itens restantes: ${itemsLeft.toLocaleString('pt-PT')} ficheiros`;
   }
   
   // Update fake speed
   if (currentSpeed) {
     const speed = (Math.random() * 3 + 1).toFixed(1);
-    currentSpeed.textContent = `Current speed: ${speed} MB/s`;
+    currentSpeed.textContent = `Velocidade atual: ${speed.replace('.', ',')} MB/s`;
   }
 }
 
@@ -163,10 +163,10 @@ function initWindowsButtons() {
   if (detailsButton) {
     detailsButton.addEventListener('click', function() {
       showWindowsDialog(
-        'Maintenance Details', 
-        'The website is currently undergoing scheduled maintenance to improve performance and security. ' +
-        'This maintenance window is scheduled from August 5, 2025 to August 15, 2025. ' +
-        'We apologize for any inconvenience this may cause.'
+        'Detalhes da Manutenção', 
+        'O website está atualmente em manutenção programada para melhorar o desempenho e a segurança. ' +
+        'Talvez acabe o website ou faça uma nova versão. ' +
+        'Pedimos desculpa por qualquer inconveniente causado.'
       );
     });
   }
@@ -182,8 +182,8 @@ function initWindowsButtons() {
         progressBar.style.width = '0%';
         
         showWindowsDialog(
-          'Connection Attempt', 
-          'Attempting to reconnect to the server...\n\nServer is still under maintenance. Please try again later.'
+          'Tentativa de Conexão', 
+          'A tentar reconectar ao servidor...\n\nServidor ainda em manutenção. Por favor, tente novamente mais tarde.'
         );
         
         setTimeout(() => {
@@ -771,7 +771,7 @@ function updateCountdown() {
     // If the target date has passed
     clearInterval(countdownInterval);
     if (timerElement) {
-      timerElement.innerHTML = "Completion: 99%";
+      timerElement.innerHTML = "Conclusão: 99%";
     }
     return;
   }
@@ -782,30 +782,84 @@ function updateCountdown() {
   const minutes = Math.floor((timeRemaining % (1000 * 60 * 60)) / (1000 * 60));
   const seconds = Math.floor((timeRemaining % (1000 * 60)) / 1000);
 
-  // Display the countdown in Windows 7 format
+  // Display the countdown in Windows 7 format in Portuguese
   if (timerElement) {
-    timerElement.innerHTML = `Time remaining: ${days}d ${hours}h ${minutes}m ${seconds}s`;
+    timerElement.innerHTML = `Tempo restante: ${days}d ${hours}h ${minutes}m ${seconds}s`;
   }
   
   // Also update the file transfer animation details with the remaining time
   const transferTimeRemaining = document.querySelector('.win7-progress-details span:first-child');
   if (transferTimeRemaining) {
-    transferTimeRemaining.textContent = `Time remaining: about ${days}d ${hours}h ${minutes}m`;
+    transferTimeRemaining.textContent = `Tempo restante: cerca de ${days}d ${hours}h ${minutes}m`;
   }
 }
 
 // --------------------------------------------------------------------------------
-// Function: playSound()
-// Helper function to safely play sounds
+// Function: makeDialogDraggable()
+// Makes any dialog window draggable by its title bar
 // --------------------------------------------------------------------------------
-function playSound(soundUrl) {
-  try {
-    const sound = new Audio(soundUrl);
-    sound.volume = AUDIO_SOURCES.volume;
-    sound.play().catch(err => {
-      console.log('Audio play failed (this is normal in some browsers):', err.message);
-    });
-  } catch (err) {
-    console.log('Audio creation failed:', err.message);
+function makeDialogDraggable(dialogWindow, titleBar) {
+  if (!dialogWindow || !titleBar) return;
+  
+  let isDragging = false;
+  let offsetX, offsetY;
+  
+  // Mouse down event on title bar starts dragging
+  titleBar.addEventListener('mousedown', function(e) {
+    // Don't initiate drag if clicking on a control button
+    if (e.target.tagName === 'BUTTON') return;
+    
+    isDragging = true;
+    
+    // Calculate the offset from the mouse position to the window position
+    const rect = dialogWindow.getBoundingClientRect();
+    offsetX = e.clientX - rect.left;
+    offsetY = e.clientY - rect.top;
+    
+    // Add a subtle transition when dragging starts
+    dialogWindow.style.transition = 'none';
+    
+    // Change cursor to grabbing
+    titleBar.style.cursor = 'grabbing';
+    
+    // Prevent text selection during drag
+    e.preventDefault();
+  });
+  
+  // Mouse move event handles the dragging
+  function moveHandler(e) {
+    if (!isDragging) return;
+    
+    // Calculate new position
+    const x = e.clientX - offsetX;
+    const y = e.clientY - offsetY;
+    
+    // Update window position
+    dialogWindow.style.left = x + 'px';
+    dialogWindow.style.top = y + 'px';
+    dialogWindow.style.transform = 'none';
   }
+  
+  // Mouse up event ends dragging
+  function upHandler() {
+    if (!isDragging) return;
+    
+    isDragging = false;
+    
+    // Reset cursor
+    titleBar.style.cursor = 'move';
+    
+    // Add a subtle transition when dragging ends
+    dialogWindow.style.transition = 'box-shadow 0.2s ease';
+  }
+  
+  // Add event listeners
+  document.addEventListener('mousemove', moveHandler);
+  document.addEventListener('mouseup', upHandler);
+  
+  // Remove event listeners when window is closed
+  dialogWindow.addEventListener('DOMNodeRemoved', function() {
+    document.removeEventListener('mousemove', moveHandler);
+    document.removeEventListener('mouseup', upHandler);
+  });
 }

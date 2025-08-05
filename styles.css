@@ -25,12 +25,46 @@ canvas {
   z-index: 1;
 }
 
-/* Window styling overrides for 7.css */
+/* Window styling overrides for 7.css with glass effect */
 .window {
   width: 600px !important;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5) !important;
   border-radius: 3px !important;
   overflow: hidden;
+  position: relative;
+}
+
+/* Glass effect for Windows 7 */
+.window::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 8px;
+  background: linear-gradient(to bottom, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.3) 100%);
+  border-top-left-radius: 3px;
+  border-top-right-radius: 3px;
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* Add glass effect to title bar */
+.title-bar {
+  background: linear-gradient(to bottom, #2a8ad4 0%, #2a7ad2 100%) !important;
+  position: relative;
+  overflow: hidden;
+}
+
+.title-bar::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 50%;
+  background: linear-gradient(to bottom, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0.1) 100%);
+  pointer-events: none;
 }
 
 /* Animation for minimize */
@@ -40,10 +74,89 @@ canvas {
   transition: all 0.3s ease;
 }
 
+/* Window maximized state */
 .window.maximized {
   width: 90% !important;
   height: 80% !important;
+  top: 10% !important;
+  left: 5% !important;
+  transform: none !important;
+  border-radius: 3px !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5) !important;
   transition: all 0.3s ease;
+}
+
+.window.maximized .window-body {
+  height: calc(100% - 30px);
+  overflow-y: auto;
+}
+
+/* Resize handles */
+.resize-handle {
+  position: absolute;
+  z-index: 1000;
+  background-color: transparent;
+}
+
+.resize-n, .resize-s {
+  height: 6px;
+  width: 100%;
+  left: 0;
+}
+
+.resize-n {
+  top: -3px;
+  cursor: n-resize;
+}
+
+.resize-s {
+  bottom: -3px;
+  cursor: s-resize;
+}
+
+.resize-e, .resize-w {
+  height: 100%;
+  width: 6px;
+  top: 0;
+}
+
+.resize-e {
+  right: -3px;
+  cursor: e-resize;
+}
+
+.resize-w {
+  left: -3px;
+  cursor: w-resize;
+}
+
+.resize-ne, .resize-nw, .resize-se, .resize-sw {
+  width: 10px;
+  height: 10px;
+}
+
+.resize-ne {
+  top: -3px;
+  right: -3px;
+  cursor: ne-resize;
+}
+
+.resize-nw {
+  top: -3px;
+  left: -3px;
+  cursor: nw-resize;
+}
+
+.resize-se {
+  bottom: -3px;
+  right: -3px;
+  cursor: se-resize;
+}
+
+.resize-sw {
+  bottom: -3px;
+  left: -3px;
+  cursor: sw-resize;
 }
 
 .window-body {
@@ -194,10 +307,17 @@ fieldset {
 /* Animation for the progress bar */
 @keyframes progress-animation {
   0% { width: 0%; }
-  25% { width: 35%; }
-  50% { width: 60%; }
-  75% { width: 85%; }
-  100% { width: 95%; }
+  10% { width: 15%; }
+  20% { width: 24%; }
+  30% { width: 35%; }
+  40% { width: 42%; }
+  50% { width: 54%; }
+  60% { width: 62%; }
+  70% { width: 71%; }
+  80% { width: 83%; }
+  90% { width: 91%; }
+  95% { width: 97%; }
+  100% { width: 99%; }
 }
 
 progress {
@@ -395,6 +515,57 @@ button {
   margin: 5px 0;
 }
 
+/* Math challenge styles */
+.math-challenge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 10px 0;
+  padding: 15px;
+  background-color: #f0f0f0;
+  border: 1px solid #d1d1d1;
+  border-radius: 2px;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+  transition: background-color 0.3s ease;
+}
+
+.math-challenge.challenge-updated {
+  background-color: #e5f1fb;
+  animation: challenge-pulse 0.5s ease;
+}
+
+@keyframes challenge-pulse {
+  0% { background-color: #f0f0f0; }
+  50% { background-color: #e5f1fb; }
+  100% { background-color: #f0f0f0; }
+}
+
+.math-problem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.math-problem input {
+  width: 60px;
+  height: 26px;
+  padding: 2px 5px;
+  font-size: 16px;
+  border: 1px solid #7a7a7a;
+  border-radius: 2px;
+  text-align: center;
+}
+
+.math-instructions {
+  font-size: 12px;
+  color: #555;
+  text-align: center;
+  margin-top: 5px;
+}
+
 /* Typing effect */
 .typing-effect {
   position: relative;
@@ -424,6 +595,311 @@ button {
 @keyframes sending-progress-move {
   0% { background-position: 0 0; }
   100% { background-position: 30px 0; }
+}
+
+/* RSS Feed Styles */
+.rss-feed-window {
+  width: 700px !important;
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+.rss-feed-container {
+  max-height: 60vh;
+  overflow-y: auto;
+  padding: 5px;
+  font-family: 'Segoe UI', Tahoma, sans-serif;
+}
+
+.rss-header {
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #d1d1d1;
+}
+
+.rss-header h3 {
+  margin: 0;
+  font-size: 16px;
+  color: #1a73e8;
+}
+
+.rss-description {
+  font-size: 12px;
+  color: #555;
+  margin: 5px 0 0 0;
+}
+
+.rss-items {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.rss-item {
+  padding: 10px;
+  background-color: #f9f9f9;
+  border: 1px solid #e0e0e0;
+  border-radius: 2px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.rss-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 8px;
+}
+
+.rss-item-header h4 {
+  margin: 0;
+  font-size: 14px;
+  color: #333;
+  flex: 1;
+}
+
+.rss-date {
+  font-size: 11px;
+  color: #666;
+  white-space: nowrap;
+  margin-left: 10px;
+}
+
+.rss-content {
+  font-size: 12px;
+  line-height: 1.4;
+  margin-bottom: 10px;
+  color: #444;
+  max-height: 150px;
+  overflow-y: auto;
+}
+
+.rss-content img {
+  max-width: 100%;
+  height: auto;
+  margin: 5px 0;
+}
+
+.rss-item-footer {
+  text-align: right;
+  padding-top: 5px;
+}
+
+.rss-link {
+  display: inline-block;
+  padding: 2px 8px;
+  background: linear-gradient(to bottom, #f0f0f0 0%, #e3e3e3 100%);
+  border: 1px solid #ccc;
+  border-radius: 2px;
+  color: #0066cc;
+  text-decoration: none;
+  font-size: 11px;
+}
+
+.rss-link:hover {
+  background: linear-gradient(to bottom, #e5f1fb 0%, #d8ebf8 100%);
+  border-color: #0078d7;
+}
+
+.loading-indicator {
+  padding: 20px;
+  text-align: center;
+}
+
+.loading-text {
+  margin-top: 10px;
+  font-size: 12px;
+  color: #555;
+}
+
+.rss-error {
+  padding: 15px;
+  background-color: #fff5f5;
+  border: 1px solid #ffd5d5;
+  color: #d83b01;
+  text-align: center;
+  border-radius: 2px;
+}
+
+.error-details {
+  font-size: 11px;
+  margin-top: 5px;
+  color: #777;
+}
+
+.no-items {
+  text-align: center;
+  color: #666;
+  padding: 20px;
+  font-style: italic;
+}
+
+/* Radio Player Styles */
+.radio-player-window {
+  width: 500px !important;
+  max-height: 80vh;
+  overflow: hidden;
+}
+
+.radio-player-container {
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.radio-station-info {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 10px;
+  padding: 8px;
+  border: 1px solid #d1d1d1;
+  border-radius: 3px;
+  background-color: #f9f9f9;
+}
+
+.radio-logo {
+  width: 100px;
+  height: auto;
+  overflow: hidden;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.radio-logo img {
+  max-width: 100%;
+  max-height: 80px;
+  object-fit: contain;
+}
+
+.radio-details h3 {
+  margin: 0 0 5px 0;
+  font-size: 1.2em;
+}
+
+.radio-details p {
+  margin: 0 0 8px 0;
+  font-size: 0.9em;
+  color: #555;
+}
+
+.radio-status {
+  font-size: 0.85em;
+  font-style: italic;
+  color: #0066cc;
+}
+
+/* Custom audio controls */
+.radio-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 10px 0;
+}
+
+.control-buttons {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.radio-btn {
+  min-width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.volume-control {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+}
+
+#volume-slider {
+  width: 100px;
+}
+
+/* Progress bar for radio */
+.progress-container {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.radio-progress-bar {
+  width: 100%;
+  height: 16px;
+  background-color: #f0f0f0;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  overflow: hidden;
+  position: relative;
+}
+
+#audio-progress-bar {
+  height: 100%;
+  background: linear-gradient(to bottom, #a9e47f 0%,#7dc45d 100%);
+  width: 0%;
+  transition: width 0.3s;
+}
+
+.sending-progress {
+  background: linear-gradient(to right, #a9e47f 0%, #7dc45d 50%, #a9e47f 100%);
+  background-size: 200% 100%;
+  animation: progress-bar-animation 2s linear infinite;
+}
+
+@keyframes progress-bar-animation {
+  0% { background-position: 100% 0; }
+  100% { background-position: 0 0; }
+}
+
+.time-display {
+  font-size: 0.8em;
+  text-align: right;
+  color: #555;
+}
+
+/* Now playing section */
+.now-playing {
+  margin-top: 10px;
+}
+
+.now-playing-info {
+  min-height: 20px;
+}
+
+.marquee {
+  width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.marquee span {
+  display: inline-block;
+  animation: marquee 15s linear infinite;
+}
+
+@keyframes marquee {
+  0% { transform: translateX(100%); }
+  100% { transform: translateX(-100%); }
+}
+
+/* Radio quality selector */
+.radio-quality {
+  margin-top: 10px;
+}
+
+/* Allow native audio controls as fallback */
+#radio-audio {
+  width: 100%;
+  display: none; /* Hide native controls when we use custom controls */
 }
 
 /* Responsive adjustments */

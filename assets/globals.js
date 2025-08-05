@@ -14,7 +14,7 @@ const ANIMATION_PARAMS = {
 
 // Maintenance countdown settings
 const MAINTENANCE_SETTINGS = {
-  targetDate: new Date('August 15, 2025 00:00:00').getTime(),
+  targetDate: new Date(new Date().getTime() + 365 * 24 * 60 * 60 * 1000).getTime(), // 365 days from now
   progressUpdateInterval: 800,  // Milliseconds between progress updates
   progressInitialMin: 15,       // Minimum starting progress percentage
   progressInitialMax: 45        // Maximum starting progress percentage
@@ -32,7 +32,4 @@ const AUDIO_SOURCES = {
 const FORM_SETTINGS = {
   apiEndpoint: 'https://api.web3forms.com/submit',
   accessKey: '29a12530-1034-4d1e-8575-d72d8d916abf',
-  cloudflareKey: '0x4AAAAAABoph6l8jAkFimWx',
-  cloudflareSecretKey: '0x4AAAAAABoph5HWfo3upLuQOOkUbShvAk8',
-  hcaptchaKey: 'f48ac19e-4104-41f4-9a1a-52fad4ea089c'
 };
