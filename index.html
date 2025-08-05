@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Website Under Maintenance</title>
+    
+    <!-- Windows 7 CSS Framework -->
+    <link rel="stylesheet" href="https://unpkg.com/7.css">
+    <link rel="stylesheet" href="styles.css">
+    
+    <!--
+    The following scripts are loaded via CDN:
+      • three.js for 3D rendering.
+      • dat.GUI for UI controls.
+      • OrbitControls to allow camera orbiting.
+      • EffectComposer, RenderPass, and UnrealBloomPass to add a bloom effect (simulating volumetric light).
+    -->
+    <!-- Core Three.js library first -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
+    <!-- Shaders must be loaded before any passes or effects that use them -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
+    
+    <!-- Post-processing components in dependency order -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+    
+    <!-- Controls -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    
+    <!-- GUI library can be loaded at any point -->
+    <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.7.7/dat.gui.min.js"></script>-->
+    
+    <!-- Global settings and variables -->
+    <script src="assets/globals.js"></script>
+    
+    <!-- Web3Forms functionality -->
+    <script src="assets/web3forms.js"></script>
+</head>
+<body>
+    <!-- Windows 7 themed maintenance dialog -->
+    <div class="win7-container">
+        <div class="window">
+            <div class="title-bar">
+                <div class="title-bar-text">Website Maintenance - Sistema em Manutenção</div>
+                <div class="title-bar-controls">
+                    <button aria-label="Minimize"></button>
+                    <button aria-label="Maximize"></button>
+                    <button aria-label="Close"></button>
+                </div>
+            </div>
+            <div class="window-body">
+                <div class="maintenance-header">
+                    <img src="https://i.imgur.com/QSWQrJJ.png" alt="Warning" class="warning-icon">
+                    <h1>Website em Manutenção</h1>
+                </div>
+                
+                <div class="status-bar">
+                    <p class="status-bar-field">Status: Maintenance in progress</p>
+                    <p class="status-bar-field" id="timer">Loading...</p>
+                </div>
+                
+                <fieldset>
+                    <legend>Detalhes</legend>
+                    <p>Estamos a fazer algumas mudanças no website. O serviço estará novamente disponível em breve.</p>
+                </fieldset>
+                
+                <div class="progress-container">
+                    <div class="progress-header">
+                        <span>Repairing website files...</span>
+                        <span id="progress-percent">45% complete</span>
+                    </div>
+                    <div class="win7-progress">
+                        <div class="win7-progress-bar">
+                            <div class="win7-progress-green"></div>
+                        </div>
+                        <div class="win7-progress-details">
+                            <span>Time remaining: About 9 days</span>
+                            <span>Items remaining: 2,548 files</span>
+                            <span>Current speed: 3.4 MB/s</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <fieldset>
+                    <legend>Contato</legend>
+                    <p>Para mais informações, entre em contato:</p>
+                    <div class="field-row">
+                        <label for="email">Email:</label>
+                        <a href="mailto:sites@ipv7.pt">sites@ipv7.pt</a>
+                    </div>
+                    
+                    <div class="field-row field-row-last">
+                        <button id="email-btn">Enviar Email</button>
+                    </div>
+                </fieldset>
+                
+                <section class="field-row field-row-last">
+                    <button id="details-btn">Detalhes</button>
+                    <button id="retry-btn">Tentar Novamente</button>
+                </section>
+            </div>
+        </div>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+</html>
