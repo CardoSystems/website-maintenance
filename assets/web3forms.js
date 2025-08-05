@@ -7,6 +7,7 @@ const WEB3FORMS_CONFIG = {
     apiKey: FORM_SETTINGS.accessKey,
     endpoint: FORM_SETTINGS.apiEndpoint,
     cloudflareKey: FORM_SETTINGS.cloudflareKey,
+    hcaptchaKey: FORM_SETTINGS.hcaptchaKey,
     soundEffects: {
         open: "https://www.myinstants.com/media/sounds/windows-xp-startup.mp3",
         send: AUDIO_SOURCES.startSound,
@@ -17,8 +18,10 @@ const WEB3FORMS_CONFIG = {
     }
 };
 
-// Turnstile token variable
+// Captcha token variables
 let turnstileToken = null;
+let hcaptchaToken = null;
+let captchaType = 'turnstile'; // Default to Turnstile, will fallback to hCaptcha if needed
 
 // Initialize the email form functionality
 function initEmailForm() {
@@ -28,17 +31,22 @@ function initEmailForm() {
         emailButton.addEventListener('click', showEmailFormWindow);
     }
 
-    // Load Cloudflare Turnstile script
-    loadTurnstileScript();
+    // Both scripts are now preloaded in HTML, so we just need to check which one is available
+    setupCaptchaAvailability();
 }
 
-// Load Cloudflare Turnstile script
-function loadTurnstileScript() {
-    const script = document.createElement('script');
-    script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js";
-    script.async = true;
-    script.defer = true;
-    document.head.appendChild(script);
+// Setup captcha availability check
+function setupCaptchaAvailability() {
+    // Set a timeout to check if Turnstile is available, otherwise use hCaptcha
+    setTimeout(() => {
+        if (typeof window.turnstile === 'undefined') {
+            console.log('Cloudflare Turnstile not available. Using hCaptcha...');
+            captchaType = 'hcaptcha';
+        } else {
+            console.log('Cloudflare Turnstile available and will be used.');
+            captchaType = 'turnstile';
+        }
+    }, 2000); // Give scripts time to initialize
 }
 
 // Play a sound effect
@@ -164,7 +172,15 @@ function showEmailFormWindow() {
         <fieldset>
             <legend>Verification</legend>
             <div class="field-row verification-row">
-                <div class="cf-turnstile" data-sitekey="${WEB3FORMS_CONFIG.cloudflareKey}" data-callback="turnstileCallback"></div>
+                <!-- Turnstile container (default) -->
+                <div id="turnstile-container" class="captcha-container">
+                    <div class="cf-turnstile" data-sitekey="${WEB3FORMS_CONFIG.cloudflareKey}" data-callback="turnstileCallback"></div>
+                </div>
+                
+                <!-- hCaptcha container (fallback) -->
+                <div id="hcaptcha-container" class="captcha-container" style="display: none;">
+                    <div class="h-captcha" data-sitekey="${WEB3FORMS_CONFIG.hcaptchaKey}" data-callback="hcaptchaCallback"></div>
+                </div>
             </div>
         </fieldset>
         
@@ -228,6 +244,11 @@ function showEmailFormWindow() {
     dialogWindow.classList.add('window-opening');
     setTimeout(() => {
         dialogWindow.classList.remove('window-opening');
+        
+        // Check and switch captcha after window is fully opened and visible
+        setTimeout(() => {
+            checkAndSwitchCaptcha();
+        }, 300);
     }, 400);
 }
 
@@ -351,8 +372,15 @@ function setupFormSubmission(form) {
     form.addEventListener('submit', async function(e) {
         e.preventDefault();
         
-        // Validate Turnstile token
-        if (!turnstileToken) {
+        // Validate captcha token based on current type
+        let hasValidToken = false;
+        if (captchaType === 'turnstile' && turnstileToken) {
+            hasValidToken = true;
+        } else if (captchaType === 'hcaptcha' && hcaptchaToken) {
+            hasValidToken = true;
+        }
+        
+        if (!hasValidToken) {
             formStatus.textContent = 'Please complete the CAPTCHA verification.';
             formStatus.className = 'form-status error';
             playSound('error');
@@ -363,9 +391,13 @@ function setupFormSubmission(form) {
         formStatus.textContent = 'Sending message...';
         formStatus.className = 'form-status sending';
         
-        // Add Turnstile token to form data
+        // Add the appropriate captcha token to form data
         const formData = new FormData(form);
-        formData.append('cf-turnstile-response', turnstileToken);
+        if (captchaType === 'turnstile' && turnstileToken) {
+            formData.append('cf-turnstile-response', turnstileToken);
+        } else if (captchaType === 'hcaptcha' && hcaptchaToken) {
+            formData.append('h-captcha-response', hcaptchaToken);
+        }
         
         // Play sending sound
         playSound('send');
@@ -412,11 +444,8 @@ function setupFormSubmission(form) {
                     );
                 }, 1000);
                 
-                // Reset Turnstile
-                if (window.turnstile) {
-                    window.turnstile.reset();
-                }
-                turnstileToken = null;
+                // Reset Captcha
+                resetCaptcha();
             } else {
                 throw new Error(data.message || 'Form submission failed');
             }
@@ -445,11 +474,8 @@ function setupFormSubmission(form) {
             formStatus.textContent = '';
             formStatus.className = 'form-status';
             
-            // Reset Turnstile
-            if (window.turnstile) {
-                window.turnstile.reset();
-            }
-            turnstileToken = null;
+            // Reset Captcha
+            resetCaptcha();
             
             // Add reset animation
             resetBtn.classList.add('clicked');
@@ -457,6 +483,17 @@ function setupFormSubmission(form) {
                 resetBtn.classList.remove('clicked');
             }, 200);
         });
+    }
+}
+
+// Function to reset the current captcha
+function resetCaptcha() {
+    if (captchaType === 'turnstile' && window.turnstile) {
+        window.turnstile.reset();
+        turnstileToken = null;
+    } else if (captchaType === 'hcaptcha' && window.hcaptcha) {
+        window.hcaptcha.reset();
+        hcaptchaToken = null;
     }
 }
 
@@ -559,6 +596,7 @@ function showWindowsDialog(title, message) {
 // Callback function for Cloudflare Turnstile
 function turnstileCallback(token) {
     turnstileToken = token;
+    captchaType = 'turnstile';
     const formStatus = document.getElementById('web3-form-status');
     if (formStatus) {
         formStatus.textContent = 'Verification completed!';
@@ -566,8 +604,47 @@ function turnstileCallback(token) {
     }
 }
 
-// Properly expose the turnstileCallback function globally
+// Callback function for hCaptcha
+function hcaptchaCallback(token) {
+    hcaptchaToken = token;
+    captchaType = 'hcaptcha';
+    const formStatus = document.getElementById('web3-form-status');
+    if (formStatus) {
+        formStatus.textContent = 'Verification completed!';
+        formStatus.className = 'form-status success';
+    }
+}
+
+// Check which captcha is loaded and switch containers if needed
+function checkAndSwitchCaptcha() {
+    // This function is called after a delay to ensure both scripts have had a chance to load
+    const turnstileContainer = document.getElementById('turnstile-container');
+    const hcaptchaContainer = document.getElementById('hcaptcha-container');
+    
+    if (!turnstileContainer || !hcaptchaContainer) return;
+    
+    if (captchaType === 'hcaptcha') {
+        turnstileContainer.style.display = 'none';
+        hcaptchaContainer.style.display = 'block';
+    } else {
+        turnstileContainer.style.display = 'block';
+        hcaptchaContainer.style.display = 'none';
+    }
+}
+
+// Properly expose the callback functions globally
 window.turnstileCallback = turnstileCallback;
+window.hcaptchaCallback = hcaptchaCallback;
 
 // Initialize on document load
-document.addEventListener('DOMContentLoaded', initEmailForm);
+document.addEventListener('DOMContentLoaded', function() {
+    initEmailForm();
+    
+    // After a delay, check which captcha system is available
+    setTimeout(() => {
+        // If the form window is open, update the captcha display
+        if (document.querySelector('.email-form-window')) {
+            checkAndSwitchCaptcha();
+        }
+    }, 5500); // Wait a bit longer than the initial captcha load timeout
+});
