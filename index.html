@@ -10,53 +10,36 @@
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="styles-additional.css">
     
-    <!--
-    The following scripts are loaded via CDN:
-      • three.js for 3D rendering.
-      • dat.GUI for UI controls.
-      • OrbitControls to allow camera orbiting.
-      • EffectComposer, RenderPass, and UnrealBloomPass to add a bloom effect (simulating volumetric light).
-    -->
+
     <!-- Core Three.js library first -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>   
     <!-- Shaders must be loaded before any passes or effects that use them -->
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
-    
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"></script>   
     <!-- Post-processing components in dependency order -->
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
-    
     <!-- Controls -->
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-    
-    <!-- GUI library can be loaded at any point -->
     <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.7.7/dat.gui.min.js"></script>-->
-    
-    <!-- HLS.js for streaming audio -->
+
+    <!-- core scripts-->
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-    
-    <!-- RSS Parser -->
     <script src="https://cdn.jsdelivr.net/npm/rss-parser@3.12.0/dist/rss-parser.min.js"></script>
-    
-    <!-- Global settings and variables -->
-    <script src="assets/globals.js"></script>
-    
-    <!-- Web3Forms functionality -->
-    <script src="assets/web3forms.js"></script>
-    
-    <!-- Window Manager -->
+    <script src="assets/globals.js"></script>   
+    <script src="assets/web3forms.js"></script>   
     <script src="assets/window-manager.js"></script>
+    <script src="assets/mobile-maximize.js"></script>
+
 </head>
 <body>
     <!-- Windows 7 themed maintenance dialog -->
     <div class="win7-container">
         <div class="window">
             <div class="title-bar">
-                <div class="title-bar-text">Website Maintenance - Sistema em Manutenção</div>
+                <div class="title-bar-text">Website em Manutenção</div>
                 <div class="title-bar-controls">
                     <button aria-label="Minimize"></button>
                     <button aria-label="Maximize"></button>
@@ -65,7 +48,6 @@
             </div>
             <div class="window-body">
                 <div class="maintenance-header">
-                    <img src="https://i.imgur.com/QSWQrJJ.png" alt="Warning" class="warning-icon">
                     <h1>Website em Manutenção</h1>
                 </div>
                 
