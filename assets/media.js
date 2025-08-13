@@ -1600,7 +1600,7 @@ async function loadRSSFeed(container, loadingIndicator) {
         
         // Fetch and parse feed (via proxy to avoid CORS issues)
         const proxyUrl = 'https://api.rss2json.com/v1/api.json?rss_url=';
-        const feedUrl = 'https://rss.app/feeds/taXS6IOr2p4XGd4p.xml';
+        const feedUrl = 'https://www.noticiasaominuto.com/rss/ultima-hora';
         const response = await fetch(proxyUrl + encodeURIComponent(feedUrl));
         const data = await response.json();
         
