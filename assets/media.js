@@ -106,7 +106,7 @@ function showRadioPlayer() {
         stationInfo.className = 'radio-station-info';
         stationInfo.innerHTML = `
             <div class="radio-logo">
-                <img src="https://cdn-images.rtp.pt/common/img/channels/logos/color-negative/horizontal/antena3.png?w=350&q=90" alt="Antena 3 Logo">
+                <img src="https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fmedia.rtp.pt%2Fempresa%2Fwp-content%2Fuploads%2Fsites%2F31%2F2015%2F07%2FAntena3_positivo_vert_RGB.png&f=1&ipt=dd717e1fc245b7bf66b1d6c9646ac7899e8f27271861f66d6e3f301f93a2c9fe" alt="Antena 3 Logo">
             </div>
             <div class="radio-details">
                 <h3>Antena 3</h3>
