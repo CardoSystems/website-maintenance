@@ -106,7 +106,7 @@ function showRadioPlayer() {
         stationInfo.className = 'radio-station-info';
         stationInfo.innerHTML = `
             <div class="radio-logo">
-                <img src="https://cdn.xperia.pt/antena3.png" alt="Antena 3 Logo">
+                <img src="https://cdn-images.rtp.pt/common/img/channels/logos/color-negative/horizontal/antena3.png?w=350&q=90" alt="Antena 3 Logo">
             </div>
             <div class="radio-details">
                 <h3>Antena 3</h3>
@@ -150,27 +150,6 @@ function showRadioPlayer() {
         radioContainer.appendChild(audioElement);
         radioContainer.appendChild(customControls);
         
-        // Add radio quality selector
-        const qualitySelector = document.createElement('div');
-        qualitySelector.className = 'radio-quality';
-        qualitySelector.innerHTML = `
-            <fieldset>
-                <legend>Qualidade do Stream</legend>
-                <div class="field-row">
-                    <input id="radio-quality-high" type="radio" name="radio-quality" value="high" checked>
-                    <label for="radio-quality-high">Alta Qualidade</label>
-                </div>
-                <div class="field-row">
-                    <input id="radio-quality-medium" type="radio" name="radio-quality" value="medium">
-                    <label for="radio-quality-medium">Qualidade Média</label>
-                </div>
-                <div class="field-row">
-                    <input id="radio-quality-low" type="radio" name="radio-quality" value="low">
-                    <label for="radio-quality-low">Baixa Qualidade</label>
-                </div>
-            </fieldset>
-        `;
-        radioContainer.appendChild(qualitySelector);
         
         // Add now playing section
         const nowPlaying = document.createElement('div');
@@ -376,7 +355,7 @@ function showEDMPlayer() {
         stationInfo.className = 'edm-station-info';
         stationInfo.innerHTML = `
             <div class="edm-logo">
-                <img src="https://cdn.xperia.pt/dancetv.png" alt="Dance Television Logo">
+                <img src="https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Flookaside.fbsbx.com%2Flookaside%2Fcrawler%2Fmedia%2F%3Fmedia_id%3D766470164860572&f=1&ipt=3ac4a4f54989aedb51d3a6e353413e3f523d90bce4bfa524d2c5fff31bd016b8" alt="Dance Television Logo">
             </div>
             <div class="edm-details">
                 <h3>Dance Television One</h3>
@@ -1711,3 +1690,4 @@ function makeFeedWindowDraggable(dialogWindow, titleBar) {
 
 // Initialize on document load
 document.addEventListener('DOMContentLoaded', initMediaFeatures);
+
