@@ -1127,7 +1127,7 @@ function makeFeedWindowDraggable(dialogWindow, titleBar) {
 function loadRSSFeed(container) {
     // Use RSS-Parser library to fetch and parse RSS feed
     const CORS_PROXY = 'https://cors-anywhere.herokuapp.com/';
-    const RSS_URL = 'https://news.google.com/rss?hl=pt-PT&gl=PT&ceid=PT:pt-150';
+    const RSS_URL = 'https://news.google.com/rss/headlines/section/topic/TECHNOLOGY?hl=pt-PT&gl=PT&ceid=PT:pt-150';
     
     // Create new RSS parser instance
     const parser = new RSSParser();
@@ -1579,7 +1579,7 @@ async function loadRSSFeed(container, loadingIndicator) {
         
         // Fetch and parse feed (via proxy to avoid CORS issues)
         const proxyUrl = 'https://api.rss2json.com/v1/api.json?rss_url=';
-        const feedUrl = 'https://www.noticiasaominuto.com/rss/ultima-hora';
+        const feedUrl = 'https://news.google.com/rss/headlines/section/topic/TECHNOLOGY?hl=pt-PT&gl=PT&ceid=PT:pt-150';
         const response = await fetch(proxyUrl + encodeURIComponent(feedUrl));
         const data = await response.json();
         
