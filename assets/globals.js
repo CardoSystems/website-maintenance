@@ -31,5 +31,5 @@ const AUDIO_SOURCES = {
 // Form settings
 const FORM_SETTINGS = {
   apiEndpoint: 'https://api.web3forms.com/submit',
-  accessKey: '29a12530-1034-4d1e-8575-d72d8d916abf',
+  accessKey: 'fb0a6e6b-bba1-4bb2-9fc7-36bdf7b33edf',
 };
