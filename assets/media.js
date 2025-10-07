@@ -106,7 +106,7 @@ function showRadioPlayer() {
         stationInfo.className = 'radio-station-info';
         stationInfo.innerHTML = `
             <div class="radio-logo">
-                <img src="https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fmedia.rtp.pt%2Fempresa%2Fwp-content%2Fuploads%2Fsites%2F31%2F2015%2F07%2FAntena3_positivo_vert_RGB.png&f=1&ipt=dd717e1fc245b7bf66b1d6c9646ac7899e8f27271861f66d6e3f301f93a2c9fe" alt="Antena 3 Logo">
+                <img src="https://cdn.xperia.pt/maintenance.xperia.pt/antena3.png" alt="Antena 3 Logo">
             </div>
             <div class="radio-details">
                 <h3>Antena 3</h3>
@@ -355,7 +355,7 @@ function showEDMPlayer() {
         stationInfo.className = 'edm-station-info';
         stationInfo.innerHTML = `
             <div class="edm-logo">
-                <img src="https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Flookaside.fbsbx.com%2Flookaside%2Fcrawler%2Fmedia%2F%3Fmedia_id%3D766470164860572&f=1&ipt=3ac4a4f54989aedb51d3a6e353413e3f523d90bce4bfa524d2c5fff31bd016b8" alt="Dance Television Logo">
+                <img src="https://cdn.xperia.pt/maintenance.xperia.pt/dancetv.png" alt="Dance Television Logo">
             </div>
             <div class="edm-details">
                 <h3>Dance Television One</h3>
@@ -1690,5 +1690,6 @@ function makeFeedWindowDraggable(dialogWindow, titleBar) {
 
 // Initialize on document load
 document.addEventListener('DOMContentLoaded', initMediaFeatures);
+
 
 
