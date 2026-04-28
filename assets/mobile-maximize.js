@@ -47,14 +47,21 @@
 
     // Determine mobile status based on criteria
     // Count how many "mobile indicators" we detect
-    let mobileFactors = 0;
-    if (hasTouchCapability) mobileFactors++;
-    if (isSmallScreen) mobileFactors++;
-    if (isMobileUserAgent) mobileFactors++;
-    if (hasOrientationAPI) mobileFactors++;
-    
-    // Return true if at least 2 factors indicate mobile
-    return mobileFactors >= 2;
+    const mobileFactors = {
+      hasTouchCapability: !!hasTouchCapability,
+      isSmallScreen: !!isSmallScreen,
+      isMobileUserAgent: !!isMobileUserAgent,
+      hasOrientationAPI: !!hasOrientationAPI
+    };
+
+    // Heuristic: require a small screen plus either touch capability or a mobile UA.
+    // This avoids treating large-screen touch-enabled desktops as mobile.
+    const isMobile = (isSmallScreen && (hasTouchCapability || isMobileUserAgent)) || isMobileUserAgent;
+
+    // Debug print for detection reasons (useful for diagnosing erroneous maximization)
+    console.log('[mobile-maximize] detection:', { mobileFactors, isMobile });
+
+    return isMobile;
   }
 
   /**

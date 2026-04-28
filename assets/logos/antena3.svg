@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="120" viewBox="0 0 400 120">
+  <defs>
+    <linearGradient id="g1" x1="0" x2="1">
+      <stop offset="0%" stop-color="#0078D7"/>
+      <stop offset="100%" stop-color="#004A8F"/>
+    </linearGradient>
+  </defs>
+  <rect rx="12" ry="12" width="400" height="120" fill="url(#g1)"/>
+  <g transform="translate(24,20)">
+    <circle cx="36" cy="36" r="36" fill="#ffffff" opacity="0.12"/>
+    <text x="90" y="60" font-family="Segoe UI, Arial, sans-serif" font-size="36" fill="#ffffff" font-weight="700">Antena 3</text>
+  </g>
+</svg>

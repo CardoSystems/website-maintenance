@@ -1,0 +1,8 @@
+# Ignore archived/obsolete assets
+assets/obsolete/
+
+# Node, OS, editor ignores (optional)
+node_modules/
+.DS_Store
+Thumbs.db
+.vscode/

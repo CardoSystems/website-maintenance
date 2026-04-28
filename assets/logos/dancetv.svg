@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="120" viewBox="0 0 400 120">
+  <defs>
+    <linearGradient id="g2" x1="0" x2="1">
+      <stop offset="0%" stop-color="#FF4D4D"/>
+      <stop offset="100%" stop-color="#C60000"/>
+    </linearGradient>
+  </defs>
+  <rect rx="12" ry="12" width="400" height="120" fill="url(#g2)"/>
+  <g transform="translate(24,20)">
+    <rect x="0" y="0" width="72" height="72" rx="8" fill="#ffffff" opacity="0.12"/>
+    <text x="100" y="60" font-family="Segoe UI, Arial, sans-serif" font-size="36" fill="#ffffff" font-weight="700">Dance TV</text>
+  </g>
+</svg>

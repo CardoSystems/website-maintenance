@@ -5,12 +5,12 @@ let scene, camera, renderer, controls, composer;
 let particleSystem, particlePositions, particleVelocities;
 let galaxySystem = null; // Will hold the galaxy cluster (added later)
 let nebula = null; // Will hold the nebula background (added later)
-let particleCount = ANIMATION_PARAMS.particleCount; // Number of particles from globals.js
-let params = ANIMATION_PARAMS; // Initialize params with defaults from globals.js
+let particleCount = ANIMATION_PARAMS && ANIMATION_PARAMS.particleCount ? ANIMATION_PARAMS.particleCount : 1000;
+let params = typeof ANIMATION_PARAMS !== 'undefined' ? ANIMATION_PARAMS : {};
 let clock = new THREE.Clock(); // Clock to keep track of elapsed time
 
 // Maintenance countdown variables
-const targetDate = MAINTENANCE_SETTINGS.targetDate;
+const targetDate = MAINTENANCE_SETTINGS ? MAINTENANCE_SETTINGS.targetDate : null;
 let countdownInterval;
 let progressInterval;
 let progressValue = 0;
@@ -22,6 +22,84 @@ initCountdown();
 initWindowsButtons();
 animateProgress();
 makeDraggable();
+
+// CRITICAL FIX: Initialize media features (fixes ghost buttons bug)
+// This ensures button listeners are attached only once at startup
+function ensureInitMediaFeatures(attempts = 6, delay = 200) {
+  try {
+    if (typeof window.initMediaFeatures === 'function') {
+      console.log('[Script] Initializing media features at startup');
+      window.initMediaFeatures();
+      return true;
+    }
+  } catch (e) {
+    // ignore
+  }
+
+  if (attempts <= 0) {
+    console.warn('[Script] initMediaFeatures function not found - media buttons may not work');
+    return false;
+  }
+
+  setTimeout(() => ensureInitMediaFeatures(attempts - 1, delay), delay);
+  return false;
+}
+
+ensureInitMediaFeatures();
+
+// Ensure media module is loaded (safe no-op if already loaded)
+import('/assets/media.js').catch(err => console.warn('[Startup] media module dynamic import failed', err));
+
+// Delegated click handler: ensure media buttons work even if modules haven't bound their functions yet.
+document.addEventListener('click', function delegatedMediaHandler(e) {
+  const btn = e.target.closest('button');
+  if (!btn) return;
+
+  try {
+    switch (btn.id) {
+      case 'winamp-btn':
+        if (typeof window.showRadioPlayer === 'function') { window.showRadioPlayer(); }
+        else {
+          console.warn('[Delegation] showRadioPlayer not available, importing media module');
+          import('/assets/media.js').then(() => {
+            if (typeof window.showRadioPlayer === 'function') window.showRadioPlayer();
+          }).catch(err => console.warn('[Delegation] dynamic import failed', err));
+        }
+        break;
+      case 'edm-btn':
+        if (typeof window.showEDMPlayer === 'function') { window.showEDMPlayer(); }
+        else {
+          console.warn('[Delegation] showEDMPlayer not available, importing media module');
+          import('/assets/media.js').then(() => {
+            if (typeof window.showEDMPlayer === 'function') window.showEDMPlayer();
+          }).catch(err => console.warn('[Delegation] dynamic import failed', err));
+        }
+        break;
+      case 'rss-btn':
+        if (typeof window.showRSSFeed === 'function') { window.showRSSFeed(); }
+        else {
+          console.warn('[Delegation] showRSSFeed not available, importing media module');
+          import('/assets/media.js').then(() => {
+            if (typeof window.showRSSFeed === 'function') window.showRSSFeed();
+          }).catch(err => console.warn('[Delegation] dynamic import failed', err));
+        }
+        break;
+      case 'tdt-btn':
+        if (typeof window.showIPTVPlayer === 'function') { window.showIPTVPlayer(); }
+        else {
+          console.warn('[Delegation] showIPTVPlayer not available, importing media module');
+          import('/assets/media.js').then(() => {
+            if (typeof window.showIPTVPlayer === 'function') window.showIPTVPlayer();
+          }).catch(err => console.warn('[Delegation] dynamic import failed', err));
+        }
+        break;
+      default:
+        break;
+    }
+  } catch (err) {
+    console.warn('[Delegation] error handling click:', err);
+  }
+});
 
 // --------------------------------------------------------------------------------
 // Function: animateProgress()
@@ -158,43 +236,7 @@ function initWindowsButtons() {
     });
   }
 
-  // Details button functionality
-  const detailsButton = document.getElementById('details-btn');
-  if (detailsButton) {
-    detailsButton.addEventListener('click', function() {
-      showWindowsDialog(
-        'Detalhes da Manutenção', 
-        'O website está atualmente em manutenção programada para melhorar o desempenho e a segurança. ' +
-        'Talvez acabe o website ou faça uma nova versão. ' +
-        'Pedimos desculpa por qualquer inconveniente causado.'
-      );
-    });
-  }
-
-  // Retry button functionality
-  const retryButton = document.getElementById('retry-btn');
-  if (retryButton) {
-    retryButton.addEventListener('click', function() {
-      // Simulate a retry by pausing and restarting the progress animation
-      const progressBar = document.querySelector('.win7-progress-green');
-      if (progressBar) {
-        clearInterval(progressInterval);
-        progressBar.style.width = '0%';
-        
-        showWindowsDialog(
-          'Tentativa de Conexão', 
-          'A tentar reconectar ao servidor...\n\nServidor ainda em manutenção. Por favor, tente novamente mais tarde.'
-        );
-        
-        setTimeout(() => {
-          // Reset progress and restart animation
-          progressValue = Math.floor(Math.random() * 20);
-          updateProgressBar();
-          animateProgress();
-        }, 2000);
-      }
-    });
-  }
+  // (Removed details/retry buttons - UI simplified)
 }
 
 // --------------------------------------------------------------------------------
@@ -202,76 +244,21 @@ function initWindowsButtons() {
 // Makes the Windows 7 window draggable by the title bar
 // --------------------------------------------------------------------------------
 function makeDraggable() {
-  const window = document.querySelector('.window');
-  const titleBar = document.querySelector('.title-bar');
-  
-  if (!window || !titleBar) return;
-  
-  // Set initial positioning for the window
-  window.style.position = 'absolute';
-  window.style.top = '50%';
-  window.style.left = '50%';
-  window.style.transform = 'translate(-50%, -50%)';
-  
-  let isDragging = false;
-  let offsetX, offsetY;
-  
-  // Mouse down event on title bar starts dragging
-  titleBar.addEventListener('mousedown', function(e) {
-    // Don't initiate drag if clicking on a control button
-    if (e.target.tagName === 'BUTTON') return;
-    
-    isDragging = true;
-    
-    // Calculate the offset from the mouse position to the window position
-    const rect = window.getBoundingClientRect();
-    offsetX = e.clientX - rect.left;
-    offsetY = e.clientY - rect.top;
-    
-    // Add a subtle transition when dragging starts
-    window.style.transition = 'none';
-    
-    // Change cursor to grabbing
-    titleBar.style.cursor = 'grabbing';
-    
-    // Prevent text selection during drag
-    e.preventDefault();
-  });
-  
-  // Mouse move event handles the dragging
-  document.addEventListener('mousemove', function(e) {
-    if (!isDragging) return;
-    
-    // Calculate new position
-    const x = e.clientX - offsetX;
-    const y = e.clientY - offsetY;
-    
-    // Update window position
-    window.style.left = x + 'px';
-    window.style.top = y + 'px';
-    window.style.transform = 'none';
-  });
-  
-  // Mouse up event ends dragging
-  document.addEventListener('mouseup', function() {
-    if (!isDragging) return;
-    
-    isDragging = false;
-    
-    // Reset cursor
-    titleBar.style.cursor = 'move';
-    
-    // Add a subtle transition when dragging ends
-    window.style.transition = 'box-shadow 0.2s ease';
-  });
-  
-  // Handle mouse leaving the window
-  document.addEventListener('mouseleave', function() {
-    if (isDragging) {
-      isDragging = false;
-      titleBar.style.cursor = 'move';
+  // Delegate to module implementation if available
+  if (typeof window.makeDraggable === 'function') {
+    try {
+      const winEl = document.querySelector('.window');
+      const titleBar = document.querySelector('.title-bar');
+      if (winEl && titleBar) {
+        window.makeDraggable(winEl, titleBar);
+        return;
+      }
+    } catch (err) {
+      console.warn('[Script] Delegated makeDraggable failed:', err);
     }
-  });
+  }
+
+  console.warn('[Script] window.makeDraggable not found; original implementation archived in assets/obsolete/script-makeDraggable.js');
 }
 
 // --------------------------------------------------------------------------------
@@ -279,133 +266,16 @@ function makeDraggable() {
 // Creates and displays a Windows 7 style dialog popup
 // --------------------------------------------------------------------------------
 function showWindowsDialog(title, message) {
-  // Create dialog elements
-  const dialogOverlay = document.createElement('div');
-  dialogOverlay.className = 'dialog-overlay';
-  
-  const dialogWindow = document.createElement('div');
-  dialogWindow.className = 'window dialog';
-  
-  const titleBar = document.createElement('div');
-  titleBar.className = 'title-bar';
-  
-  const titleText = document.createElement('div');
-  titleText.className = 'title-bar-text';
-  titleText.textContent = title;
-  
-  const titleControls = document.createElement('div');
-  titleControls.className = 'title-bar-controls';
-  
-  const closeBtn = document.createElement('button');
-  closeBtn.setAttribute('aria-label', 'Close');
-  
-  const windowBody = document.createElement('div');
-  windowBody.className = 'window-body';
-  
-  const messageText = document.createElement('p');
-  messageText.textContent = message;
-  
-  const buttonSection = document.createElement('section');
-  buttonSection.className = 'field-row field-row-last';
-  
-  const okButton = document.createElement('button');
-  okButton.textContent = 'OK';
-  
-  // Assemble the dialog
-  titleControls.appendChild(closeBtn);
-  titleBar.appendChild(titleText);
-  titleBar.appendChild(titleControls);
-  
-  windowBody.appendChild(messageText);
-  
-  buttonSection.appendChild(okButton);
-  windowBody.appendChild(buttonSection);
-  
-  dialogWindow.appendChild(titleBar);
-  dialogWindow.appendChild(windowBody);
-  
-  dialogOverlay.appendChild(dialogWindow);
-  
-  // Add dialog to the document
-  document.body.appendChild(dialogOverlay);
-  
-  // Set initial position
-  dialogWindow.style.position = 'absolute';
-  dialogWindow.style.top = '50%';
-  dialogWindow.style.left = '50%';
-  dialogWindow.style.transform = 'translate(-50%, -50%)';
-  
-  // Variables for drag functionality
-  let isDragging = false;
-  let offsetX, offsetY;
-  
-  // Function to close the dialog and clean up event listeners
-  function closeDialog() {
-    document.body.removeChild(dialogOverlay);
-    document.removeEventListener('mousemove', moveHandler);
-    document.removeEventListener('mouseup', upHandler);
-    dialogOverlay.removeEventListener('click', overlayClickHandler);
-    okButton.removeEventListener('click', closeDialog);
-    closeBtn.removeEventListener('click', closeDialog);
-  }
-  
-  // Event handlers with named functions so they can be removed
-  function moveHandler(e) {
-    if (!isDragging) return;
-    
-    // Calculate new position
-    const x = e.clientX - offsetX;
-    const y = e.clientY - offsetY;
-    
-    // Update window position
-    dialogWindow.style.left = x + 'px';
-    dialogWindow.style.top = y + 'px';
-    dialogWindow.style.transform = 'none';
-  }
-  
-  function upHandler() {
-    if (!isDragging) return;
-    
-    isDragging = false;
-    
-    // Reset cursor
-    titleBar.style.cursor = 'move';
-  }
-  
-  function overlayClickHandler(e) {
-    if (e.target === dialogOverlay) {
-      closeDialog();
+  if (typeof window.showWindowsDialog === 'function') {
+    try {
+      window.showWindowsDialog(title, message);
+      return;
+    } catch (err) {
+      console.warn('[Script] Delegated showWindowsDialog failed:', err);
     }
   }
-  
-  // Mouse down event on title bar starts dragging
-  titleBar.addEventListener('mousedown', function(e) {
-    // Don't initiate drag if clicking on a control button
-    if (e.target.tagName === 'BUTTON') return;
-    
-    isDragging = true;
-    
-    // Calculate the offset from the mouse position to the window position
-    const rect = dialogWindow.getBoundingClientRect();
-    offsetX = e.clientX - rect.left;
-    offsetY = e.clientY - rect.top;
-    
-    // Remove transition while dragging
-    dialogWindow.style.transition = 'none';
-    
-    // Change cursor to grabbing
-    titleBar.style.cursor = 'grabbing';
-    
-    // Prevent text selection during drag
-    e.preventDefault();
-  });
-  
-  // Add event listeners
-  document.addEventListener('mousemove', moveHandler);
-  document.addEventListener('mouseup', upHandler);
-  dialogOverlay.addEventListener('click', overlayClickHandler);
-  okButton.addEventListener('click', closeDialog);
-  closeBtn.addEventListener('click', closeDialog);
+
+  console.warn('[Script] window.showWindowsDialog not found; original implementation archived in assets/obsolete/script-showWindowsDialog.js');
 }
 
 // --------------------------------------------------------------------------------

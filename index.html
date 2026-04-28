@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="https://unpkg.com/7.css">
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="styles-additional.css">
+    <link rel="stylesheet" href="iptv-player-assets/iptv-styles.css">
     
 
     <!-- Core Three.js library first -->
@@ -28,10 +29,10 @@
     <!-- core scripts-->
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/rss-parser@3.12.0/dist/rss-parser.min.js"></script>
-    <script src="assets/globals.js"></script>   
-    <script src="assets/web3forms.js"></script>   
-    <script src="assets/window-manager.js"></script>
-    <script src="assets/mobile-maximize.js"></script>
+    <script type="module" src="assets/globals.js"></script>
+    <script type="module" src="assets/window-manager.js"></script>
+    <script type="module" src="assets/mobile-maximize.js"></script>
+    <script type="module" src="assets/media.js"></script>
 
 </head>
 <body>
@@ -86,25 +87,20 @@
                         <a href="mailto:sites@ipv7.pt">cardosys@protonmail.com</a>
                     </div>
                     
-                    <div class="field-row field-row-last">
-                        <button id="email-btn">Enviar Email</button>
-                    </div>
+                    <!-- Email functionality removed to focus on EDM, RSS, Radio -->
                 </fieldset>
                 
                 <section class="field-row field-row-last">
-                    <button id="details-btn">Detalhes</button>
-                    <button id="retry-btn">Tentar Novamente</button>
                     <button id="winamp-btn">Antena 3</button>
                     <button id="edm-btn">EDM</button>
                     <button id="rss-btn">Notícias</button>
-                    <button id="refresh-btn">Reiniciar</button>
+                    <button id="tdt-btn">TDT</button>
                 </section>
             </div>
         </div>
     </div>
     
-    <script src="script.js"></script>
-    <script src="assets/media.js"></script>
+    <script type="module" src="script.js"></script>
     <script
     src="https://app.rybbit.io/api/script.js"
     data-site-id="2080"
@@ -112,6 +108,8 @@
     data-web-vitals="true"
     defer
     ></script>
-
 </body>
+
+
+</html>
 </html>
