@@ -154,7 +154,7 @@ export function makeFeedWindowDraggable(dialogWindow, titleBar) {
  * Load RSS feed data
  */
 export function loadRSSFeed(container) {
-    const CORS_PROXY = 'https://corsproxy.io/?';
+    const CORS_PROXY = 'https://api.codetabs.com/v1/proxy?quest=';
     const RSS_URL = 'https://www.rtp.pt/noticias/rss';
 
     // Try fetch via CORS proxy first, then direct fetch, then show helpful error
