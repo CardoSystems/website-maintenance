@@ -115,41 +115,7 @@
   pointer-events: none;
 }
 
-/* EPG Information Styles */
-.iptv-epg-container {
-  margin-top: 10px;
-  padding: 10px;
-  background-color: #fafafa;
-  border: 1px solid #d1d1d1;
-  border-radius: 3px;
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
 
-.iptv-epg-header {
-  font-size: 12px;
-  color: #666;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  border-bottom: 1px solid #ddd;
-  padding-bottom: 3px;
-  margin-bottom: 3px;
-}
-
-.iptv-epg-title {
-  font-weight: bold;
-  font-size: 14px;
-  color: #222;
-}
-
-.iptv-epg-desc {
-  font-size: 13px;
-  color: #555;
-  line-height: 1.4;
-  max-height: 60px;
-  overflow-y: auto;
-}
 
 .iptv-credits {
   font-size: 10px;

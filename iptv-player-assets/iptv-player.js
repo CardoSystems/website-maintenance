@@ -7,9 +7,10 @@ import { initVideoControls } from '../assets/media-utils.js';
 
 let iptvPlayerInstance = null;
 let iptvChannels = [];
-let iptvEPG = [];
 let currentChannelIndex = 0;
 let hlsInstance = null;
+const brokenChannels = new Set();
+let autoSkipCount = 0;
 
 /**
  * Parses an M3U file text into an array of channel objects.
@@ -77,94 +78,40 @@ async function fetchChannels() {
     }
 }
 
-async function fetchEPG() {
-    try {
-        const targetUrl = 'https://github.com/LITUATUI/M3UPT/raw/main/EPG/epg-m3upt.xml.gz';
-        const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(targetUrl);
-        const response = await fetch(proxyUrl);
-        
-        // Decompress GZIP stream natively
-        const ds = new DecompressionStream('gzip');
-        const decompressedStream = response.body.pipeThrough(ds);
-        const xmlText = await new Response(decompressedStream).text();
-        
-        const parser = new DOMParser();
-        const xmlDoc = parser.parseFromString(xmlText, 'text/xml');
-        
-        const programmes = Array.from(xmlDoc.querySelectorAll('programme'));
-        iptvEPG = programmes.map(prog => {
-            return {
-                channel: prog.getAttribute('channel'),
-                start: parseXMLTVDate(prog.getAttribute('start')),
-                stop: parseXMLTVDate(prog.getAttribute('stop')),
-                title: prog.querySelector('title')?.textContent || 'Sem Título',
-                desc: prog.querySelector('desc')?.textContent || ''
-            };
-        });
-        console.log(`[IPTV] Loaded ${iptvEPG.length} EPG entries.`);
-    } catch (err) {
-        console.error('Failed to fetch EPG:', err);
-    }
-}
+// EPG removed based on user request
 
-function parseXMLTVDate(dateStr) {
-    // Format: YYYYMMDDHHMMSS +ZZZZ
-    if (!dateStr) return new Date();
-    const year = dateStr.slice(0, 4);
-    const month = dateStr.slice(4, 6);
-    const day = dateStr.slice(6, 8);
-    const hour = dateStr.slice(8, 10);
-    const min = dateStr.slice(10, 12);
-    const sec = dateStr.slice(12, 14);
-    const offset = dateStr.slice(15);
-    
-    // Create an ISO string that JS can parse natively
-    const isoStr = `${year}-${month}-${day}T${hour}:${min}:${sec}${offset}`;
-    return new Date(isoStr);
-}
-
-function getCurrentProgramme(tvgId) {
-    if (!tvgId || iptvEPG.length === 0) return null;
-    const now = new Date();
-    
-    for (let i = 0; i < iptvEPG.length; i++) {
-        const prog = iptvEPG[i];
-        if (prog.channel === tvgId && now >= prog.start && now <= prog.stop) {
-            return prog;
-        }
-    }
-    return null;
-}
-
-async function loadChannel(videoElement, index) {
+async function loadChannel(videoElement, index, direction = 1) {
     if (iptvChannels.length === 0) return;
     
     // Wrap around index
     if (index >= iptvChannels.length) index = 0;
     if (index < 0) index = iptvChannels.length - 1;
     
+    // Infinite loop protection
+    if (autoSkipCount > 20) {
+        autoSkipCount = 0;
+        const statusEl = document.getElementById('iptv-channel-status');
+        if (statusEl) statusEl.textContent = 'Muitos canais offline. Parado.';
+        return;
+    }
+
+    // Smart auto-skip: instantly skip known broken channels
+    if (brokenChannels.has(index)) {
+        autoSkipCount++;
+        loadChannel(videoElement, index + direction, direction);
+        return;
+    }
+
+    // Reset skip count on first valid attempt
+    autoSkipCount = 0;
     currentChannelIndex = index;
     const channel = iptvChannels[index];
     
     const nameEl = document.getElementById('iptv-channel-name');
     const statusEl = document.getElementById('iptv-channel-status');
-    const epgTitleEl = document.getElementById('iptv-epg-title-text');
-    const epgDescEl = document.getElementById('iptv-epg-desc-text');
     
     if (nameEl) nameEl.textContent = channel.name || `Canal ${index + 1}`;
     if (statusEl) statusEl.textContent = 'A carregar...';
-
-    // Update EPG info
-    if (epgTitleEl && epgDescEl) {
-        const currentProg = getCurrentProgramme(channel.tvgId);
-        if (currentProg) {
-            epgTitleEl.textContent = currentProg.title;
-            epgDescEl.textContent = currentProg.desc;
-        } else {
-            epgTitleEl.textContent = 'Sem programação disponível';
-            epgDescEl.textContent = '';
-        }
-    }
 
     if (hlsInstance) {
         hlsInstance.destroy();
@@ -176,8 +123,7 @@ async function loadChannel(videoElement, index) {
     // Basic nested M3U fetch logic (for github urls that point to another m3u)
     if (streamUrl.endsWith('.m3u')) {
         try {
-            const proxyUrl = 'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(streamUrl);
-            const nestedRes = await fetch(proxyUrl);
+            const nestedRes = await fetch(streamUrl);
             const nestedText = await nestedRes.text();
             const nestedLines = nestedText.split('\n');
             const nestedUrl = nestedLines.find(l => l.trim().startsWith('http'));
@@ -190,12 +136,7 @@ async function loadChannel(videoElement, index) {
     if (Hls.isSupported()) {
         hlsInstance = new Hls({
             enableWorker: true,
-            lowLatencyMode: true,
-            xhrSetup: function(xhr, url) {
-                if (!url.includes('api.codetabs.com') && !url.includes('m3upt.com')) {
-                    xhr.open('GET', 'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(url), true);
-                }
-            }
+            lowLatencyMode: true
         });
         hlsInstance.loadSource(streamUrl);
         hlsInstance.attachMedia(videoElement);
@@ -211,13 +152,12 @@ async function loadChannel(videoElement, index) {
                         console.error('HLS network error:', data.details);
                         if (data.details === Hls.ErrorDetails.MANIFEST_LOAD_ERROR || 
                             data.details === Hls.ErrorDetails.MANIFEST_LOAD_TIMEOUT) {
-                            if (statusEl) statusEl.textContent = 'Canal offline/bloqueado. A avançar...';
-                            setTimeout(() => {
-                                // Ensure we're still trying to play the same skipped channel context
-                                if (currentChannelIndex === index) {
-                                    loadChannel(videoElement, index + 1);
-                                }
-                            }, 2000);
+                            brokenChannels.add(index);
+                            if (statusEl) statusEl.textContent = 'Canal bloqueado. A saltar...';
+                            if (currentChannelIndex === index) {
+                                autoSkipCount++;
+                                loadChannel(videoElement, index + direction, direction);
+                            }
                         } else {
                             hlsInstance.startLoad();
                         }
@@ -228,12 +168,12 @@ async function loadChannel(videoElement, index) {
                         break;
                     default:
                         hlsInstance.destroy();
-                        if (statusEl) statusEl.textContent = 'Erro fatal. A avançar...';
-                        setTimeout(() => {
-                            if (currentChannelIndex === index) {
-                                loadChannel(videoElement, index + 1);
-                            }
-                        }, 2000);
+                        if (statusEl) statusEl.textContent = 'Erro fatal. A saltar...';
+                        brokenChannels.add(index);
+                        if (currentChannelIndex === index) {
+                            autoSkipCount++;
+                            loadChannel(videoElement, index + direction, direction);
+                        }
                         break;
                 }
             }
@@ -245,12 +185,12 @@ async function loadChannel(videoElement, index) {
             videoElement.play().catch(e => console.log('Autoplay prevented', e));
         });
         videoElement.addEventListener('error', function () {
-            if (statusEl) statusEl.textContent = 'Canal offline/bloqueado. A avançar...';
-            setTimeout(() => {
-                if (currentChannelIndex === index) {
-                    loadChannel(videoElement, index + 1);
-                }
-            }, 2000);
+            if (statusEl) statusEl.textContent = 'Canal bloqueado. A saltar...';
+            brokenChannels.add(index);
+            if (currentChannelIndex === index) {
+                autoSkipCount++;
+                loadChannel(videoElement, index + direction, direction);
+            }
         });
     }
 }
@@ -323,18 +263,15 @@ export async function showIPTVPlayer() {
             </div>
         `;
         
-        const epgDiv = document.createElement('div');
-        epgDiv.className = 'iptv-epg-container';
-        epgDiv.innerHTML = `
-            <div class="iptv-epg-header">A Dar Agora</div>
-            <div class="iptv-epg-title" id="iptv-epg-title-text">...</div>
-            <div class="iptv-epg-desc" id="iptv-epg-desc-text">...</div>
-            <div class="iptv-credits">Lista & EPG por <a href="https://github.com/LITUATUI/M3UPT/" target="_blank">LITUATUI/M3UPT</a></div>
+        const creditsDiv = document.createElement('div');
+        creditsDiv.className = 'iptv-credits-container';
+        creditsDiv.innerHTML = `
+            <div class="iptv-credits">Lista por <a href="https://github.com/LITUATUI/M3UPT/" target="_blank">LITUATUI/M3UPT</a></div>
         `;
         
         container.appendChild(videoContainer);
         container.appendChild(controlsDiv);
-        container.appendChild(epgDiv);
+        container.appendChild(creditsDiv);
         windowBody.appendChild(container);
         
         dialogWindow.appendChild(titleBar);
@@ -377,20 +314,17 @@ export async function showIPTVPlayer() {
             await fetchChannels();
         }
 
-        // Fetch EPG if empty
-        if (iptvEPG.length === 0) {
-            await fetchEPG();
-        }
-
         if (iptvChannels.length > 0) {
             loadChannel(videoElement, 0);
             
             document.getElementById('iptv-prev-btn').addEventListener('click', () => {
-                loadChannel(videoElement, currentChannelIndex - 1);
+                autoSkipCount = 0; // reset on manual navigation
+                loadChannel(videoElement, currentChannelIndex - 1, -1);
             });
             
             document.getElementById('iptv-next-btn').addEventListener('click', () => {
-                loadChannel(videoElement, currentChannelIndex + 1);
+                autoSkipCount = 0; // reset on manual navigation
+                loadChannel(videoElement, currentChannelIndex + 1, 1);
             });
         } else {
             document.getElementById('iptv-channel-name').textContent = 'Nenhum canal encontrado.';
