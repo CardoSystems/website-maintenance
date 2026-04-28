@@ -73,6 +73,8 @@ async function fetchChannels() {
         iptvChannels = parseM3U(text);
         // Filter out youtube links as hls.js cannot play them
         iptvChannels = iptvChannels.filter(c => !c.url.includes('youtube.com') && !c.url.includes('youtu.be'));
+        // Completely ignore CNN Brasil
+        iptvChannels = iptvChannels.filter(c => !c.name.toLowerCase().includes('cnn brasil'));
     } catch (err) {
         console.error('Failed to fetch M3U:', err);
     }
