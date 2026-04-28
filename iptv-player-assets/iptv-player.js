@@ -79,8 +79,15 @@ async function fetchChannels() {
 
 async function fetchEPG() {
     try {
-        const response = await fetch('https://m3upt.com/epg');
-        const xmlText = await response.text();
+        const targetUrl = 'https://github.com/LITUATUI/M3UPT/raw/main/EPG/epg-m3upt.xml.gz';
+        const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(targetUrl);
+        const response = await fetch(proxyUrl);
+        
+        // Decompress GZIP stream natively
+        const ds = new DecompressionStream('gzip');
+        const decompressedStream = response.body.pipeThrough(ds);
+        const xmlText = await new Response(decompressedStream).text();
+        
         const parser = new DOMParser();
         const xmlDoc = parser.parseFromString(xmlText, 'text/xml');
         
@@ -182,7 +189,11 @@ async function loadChannel(videoElement, index) {
     if (Hls.isSupported()) {
         hlsInstance = new Hls({
             enableWorker: true,
-            lowLatencyMode: true
+            lowLatencyMode: true,
+            xhrSetup: function(xhr, url) {
+                // Route all HLS requests through a CORS proxy
+                xhr.open('GET', 'https://corsproxy.io/?' + encodeURIComponent(url), true);
+            }
         });
         hlsInstance.loadSource(streamUrl);
         hlsInstance.attachMedia(videoElement);

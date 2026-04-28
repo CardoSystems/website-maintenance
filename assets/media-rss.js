@@ -154,7 +154,7 @@ export function makeFeedWindowDraggable(dialogWindow, titleBar) {
  * Load RSS feed data
  */
 export function loadRSSFeed(container) {
-    const CORS_PROXY = 'https://cors-anywhere.herokuapp.com/';
+    const CORS_PROXY = 'https://corsproxy.io/?';
     const RSS_URL = 'https://www.rtp.pt/noticias/rss';
 
     // Try fetch via CORS proxy first, then direct fetch, then show helpful error
@@ -182,7 +182,7 @@ export function loadRSSFeed(container) {
     (async () => {
         try {
             // proxy attempt
-            const xml = await tryFetch(CORS_PROXY + RSS_URL);
+            const xml = await tryFetch(CORS_PROXY + encodeURIComponent(RSS_URL));
             const feed = await parseXmlToFeed(xml);
             displayRSSFeed(container, feed);
             return;
