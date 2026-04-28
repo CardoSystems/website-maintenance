@@ -189,11 +189,7 @@ async function loadChannel(videoElement, index) {
     if (Hls.isSupported()) {
         hlsInstance = new Hls({
             enableWorker: true,
-            lowLatencyMode: true,
-            xhrSetup: function(xhr, url) {
-                // Route all HLS requests through a CORS proxy
-                xhr.open('GET', 'https://corsproxy.io/?' + encodeURIComponent(url), true);
-            }
+            lowLatencyMode: true
         });
         hlsInstance.loadSource(streamUrl);
         hlsInstance.attachMedia(videoElement);
