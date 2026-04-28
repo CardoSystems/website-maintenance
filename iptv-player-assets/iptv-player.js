@@ -104,6 +104,7 @@ async function loadChannel(videoElement, index, direction = 1) {
 
     // Reset skip count on first valid attempt
     autoSkipCount = 0;
+    let recoveryAttempts = 0;
     currentChannelIndex = index;
     const channel = iptvChannels[index];
     
@@ -146,7 +147,19 @@ async function loadChannel(videoElement, index, direction = 1) {
         });
         hlsInstance.on(Hls.Events.ERROR, function (event, data) {
             if (data.fatal) {
-                if (statusEl) statusEl.textContent = 'Erro ao carregar';
+                recoveryAttempts++;
+                if (recoveryAttempts > 3) {
+                    console.error('HLS too many fatal errors:', data.details);
+                    brokenChannels.add(index);
+                    if (statusEl) statusEl.textContent = 'Canal intermitente. A saltar...';
+                    if (currentChannelIndex === index) {
+                        autoSkipCount++;
+                        loadChannel(videoElement, index + direction, direction);
+                    }
+                    return;
+                }
+
+                if (statusEl) statusEl.textContent = 'A tentar recuperar...';
                 switch (data.type) {
                     case Hls.ErrorTypes.NETWORK_ERROR:
                         console.error('HLS network error:', data.details);
