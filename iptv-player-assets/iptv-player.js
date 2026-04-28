@@ -176,7 +176,8 @@ async function loadChannel(videoElement, index) {
     // Basic nested M3U fetch logic (for github urls that point to another m3u)
     if (streamUrl.endsWith('.m3u')) {
         try {
-            const nestedRes = await fetch(streamUrl);
+            const proxyUrl = 'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(streamUrl);
+            const nestedRes = await fetch(proxyUrl);
             const nestedText = await nestedRes.text();
             const nestedLines = nestedText.split('\n');
             const nestedUrl = nestedLines.find(l => l.trim().startsWith('http'));
@@ -189,7 +190,12 @@ async function loadChannel(videoElement, index) {
     if (Hls.isSupported()) {
         hlsInstance = new Hls({
             enableWorker: true,
-            lowLatencyMode: true
+            lowLatencyMode: true,
+            xhrSetup: function(xhr, url) {
+                if (!url.includes('api.codetabs.com') && !url.includes('m3upt.com')) {
+                    xhr.open('GET', 'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(url), true);
+                }
+            }
         });
         hlsInstance.loadSource(streamUrl);
         hlsInstance.attachMedia(videoElement);
