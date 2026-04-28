@@ -202,8 +202,19 @@ async function loadChannel(videoElement, index) {
                 if (statusEl) statusEl.textContent = 'Erro ao carregar';
                 switch (data.type) {
                     case Hls.ErrorTypes.NETWORK_ERROR:
-                        console.error('HLS network error');
-                        hlsInstance.startLoad();
+                        console.error('HLS network error:', data.details);
+                        if (data.details === Hls.ErrorDetails.MANIFEST_LOAD_ERROR || 
+                            data.details === Hls.ErrorDetails.MANIFEST_LOAD_TIMEOUT) {
+                            if (statusEl) statusEl.textContent = 'Canal offline/bloqueado. A avançar...';
+                            setTimeout(() => {
+                                // Ensure we're still trying to play the same skipped channel context
+                                if (currentChannelIndex === index) {
+                                    loadChannel(videoElement, index + 1);
+                                }
+                            }, 2000);
+                        } else {
+                            hlsInstance.startLoad();
+                        }
                         break;
                     case Hls.ErrorTypes.MEDIA_ERROR:
                         console.error('HLS media error');
@@ -211,6 +222,12 @@ async function loadChannel(videoElement, index) {
                         break;
                     default:
                         hlsInstance.destroy();
+                        if (statusEl) statusEl.textContent = 'Erro fatal. A avançar...';
+                        setTimeout(() => {
+                            if (currentChannelIndex === index) {
+                                loadChannel(videoElement, index + 1);
+                            }
+                        }, 2000);
                         break;
                 }
             }
@@ -222,7 +239,12 @@ async function loadChannel(videoElement, index) {
             videoElement.play().catch(e => console.log('Autoplay prevented', e));
         });
         videoElement.addEventListener('error', function () {
-            if (statusEl) statusEl.textContent = 'Erro ao carregar';
+            if (statusEl) statusEl.textContent = 'Canal offline/bloqueado. A avançar...';
+            setTimeout(() => {
+                if (currentChannelIndex === index) {
+                    loadChannel(videoElement, index + 1);
+                }
+            }, 2000);
         });
     }
 }
